@@ -464,14 +464,15 @@ ValuedAction DESPOT::OptimalAction(VNode* vnode) {
 	ValuedAction astar(-1, Globals::NEG_INFTY);
 	for (ACT_TYPE action = 0; action < vnode->children().size(); action++) {
 		QNode* qnode = vnode->Child(action);
+//        cout << "qnode->lower_bound() = " << qnode->lower_bound() << endl;
 		if (qnode->lower_bound() > astar.value) {
 			astar = ValuedAction(action, qnode->lower_bound());
 		}
 	}
 
-	if (vnode->default_move().value > astar.value) {
-		astar = vnode->default_move();
-	}
+//	if (vnode->default_move().value > astar.value) {
+//		astar = vnode->default_move();
+//	}
 
 	return astar;
 }
