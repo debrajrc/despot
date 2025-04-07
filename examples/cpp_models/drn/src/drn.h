@@ -4,20 +4,24 @@
 #include <despot/interface/pomdp.h>
 #include <despot/core/mdp.h>
 
+#include <limits>
+
 namespace despot {
 
-/* =============================================================================
+const int INF = std::numeric_limits<int>::max(); // infinity
+
+    /* =============================================================================
  * SimpleState class
  * =============================================================================*/
 
 class SimpleState: public State {
 public:
     int id;
+    int distToTarget;
+    int distToBad;
 
     SimpleState();
-    SimpleState(int _id) :
-            id(_id) {
-    }
+    SimpleState(int _id, int _distToTarget, int _distToBad) : id(_id), distToTarget(_distToTarget), distToBad(_distToBad) {}
 
     ~SimpleState();
 };
@@ -47,35 +51,26 @@ protected:
 
     private:
 
-    std::map<int, SimpleState> states;  // state id -> state
+//    std::map<int, SimpleState> states;  // state id -> state
     std::map<int, std::string> actionIdtoName; // action id -> action name
     std::map<std::string, int> actionNametoId; // action name -> action id
     std::map<int, std::map<int, std::map<int, double>>> transitions; // state id -> action id -> next state id -> probability
     std::map<int, int> obsMap; // state id -> observation id
     std::map<int, double> stateRewards; // state id -> reward
     std::map<int, std::map<int, double>> stateActionRewards; // state id -> action id -> reward
-    double maxReward = 0;
-    double minReward = 0;
-
-    void loadDRNFile (std::string filename);
-
-//public:
-//	enum { // action
-//		A_WEST = 0, A_EAST = 1, A_NORTH = 2, A_SOUTH = 3
-//		// A_WEST = 0, A_EAST = 1, A_NORTH = 2, A_SOUTH = 3, A_PLACE = 4
-//	};
-//	enum { // observation
-//		O_INIT = 0, O_INGRID = 1, O_TARGET = 2, O_BAD = 3
-//	};
-//	enum { // rover position
-//		P00 = 0, P01 = 1, P02 = 2, P03 = 3, P10 = 4, P11 = 5, P12 = 6, P13 = 7, P20 = 8, P21 = 9, P22 = 10, P23 = 11, P30 = 12, P31 = 13, P32 = 14, P33 = 15, PINIT = 16
-//	};
+    std::map<int, std::vector<std::string>> stateLabels; // state id -> vector of labels
+    std::map<int, int> distanceToTarget; // state id -> distance to target
+    std::map<int, int> distanceToBad; // state id -> distance to bad state
+    const double maxReward = 1; // maximum reward is when we reach the target
+    const double minReward = -1; // minimum reward is when we reach a bad state
+    std::map<int,std::vector<int>> reversedGraph; // state id -> vector of state ids
+    // const int maxCounter = 10; // maximum counter value; old code, not used anymore
+//    const int alpha = 1; // alpha value for the reward function
+//    const int beta = 1; // beta value for the reward function
 
 
-//    struct DrnState {
-//        int id;
-//        std::map<std::string, DrnAction> actions;
-//    };
+    void CalculateDistances(); // calculate distances to target and bad states, need to run it after loadDRNFile
+    void loadDRNFile (std::string filename); // load the DRN file and parse it
 
 public:
 	Drn(const std::string& filename);
@@ -94,11 +89,7 @@ public:
 
 	/* Bound-related functions.*/
 	double GetMaxReward() const;
-//	ScenarioUpperBound* CreateScenarioUpperBound(std::string name = "DEFAULT",
-//		std::string particle_bound_name = "DEFAULT") const;
 	ValuedAction GetBestAction() const;
-//	ScenarioLowerBound* CreateScenarioLowerBound(std::string name = "DEFAULT",
-//		std::string particle_bound_name = "DEFAULT") const;
 
 	/* Memory management.*/
 	State* Allocate(int state_id, double weight) const;

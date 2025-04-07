@@ -3,7 +3,14 @@
 //#include "grid_avoid_4_0.h"
 #include "drn.h"
 
-std::string filename = "4x3_95.drn";
+//std::string filename = "maze1.drn";//
+std::string filename = "drone_4_1.drn";//
+//std::string filename = "hallway.drn";//
+//std::string filename = "hallway-det-simple.drn";//
+//std::string filename = "refuel.drn";//
+//std::string filename = "grid_avoid_4_01.drn";//
+//std::string filename = "maze_alex.drn";//
+//std::string filename =  "4x3_95.drn";
 
 using namespace despot;
 
