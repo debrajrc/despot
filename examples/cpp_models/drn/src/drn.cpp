@@ -82,6 +82,8 @@ bool Drn::Step(State& state, double rand_num, ACT_TYPE action,
         }
     }
 
+    int oldStateId = stateId;
+
     auto currentTransitions = transitions.at(stateId).at(actionId);
     bool stateUpdated = false;
     double cumulativeProbability = 0;
@@ -101,11 +103,39 @@ bool Drn::Step(State& state, double rand_num, ACT_TYPE action,
     assert (stateUpdated);
 
     obs = obsMap.at(stateId);
+
+    // NOTE: Following custom defined step reward is commented out
+//    double badScore, oldBadScore;
+//    if (distanceToBad.at(stateId) == INF) {
+//        badScore = 0;
+//    } else {
+//        badScore = 1.0/(distanceToBad.at(stateId)+1);
+//    }
+//    if (distanceToBad.at(oldStateId) == INF) {
+//        oldBadScore = 0;
+//    } else {
+//        oldBadScore = 1.0/(distanceToBad.at(oldStateId)+1);
+//    }
+//    double targetScore, oldTargetScore;
+//    if (distanceToTarget.at(stateId) == INF) {
+//        targetScore = 0;
+//    } else {
+//        targetScore = 1.0/(distanceToTarget.at(stateId)+1);
+//    }
+//    if (distanceToTarget.at(oldStateId) == INF) {
+//        oldTargetScore = 0;
+//    } else {
+//        oldTargetScore = 1.0/(distanceToTarget.at(oldStateId)+1);
+//    }
+//    reward = 0.6*(targetScore - oldTargetScore) - 0.4*(badScore - oldBadScore);
+    //
+
+
     return false;
 };
 
 void Drn::CalculateDistances() {
-    cout << "Calculating distances to target and bad states" << endl;
+//    cout << "Calculating distances to target and bad states" << endl;
     // Initialize queue
         std::queue<std::tuple<int, int, bool>> queue; // (state, distance, is_from_target)
 //        std::unordered_set<int> visitedTarget;
@@ -114,7 +144,6 @@ void Drn::CalculateDistances() {
     // Initialize distances to infinity
     for (const auto& stateReward : stateRewards) {
         int state = stateReward.first;
-        cout << "State: " << state << endl;
         if (stateLabels.find(state) != stateLabels.end()) {
             bool badFound = false;
             bool targetFound = false;
@@ -122,76 +151,67 @@ void Drn::CalculateDistances() {
                 if (label == "bad") {
                     distanceToBad[state] = 0;
                     queue.emplace(state, 0, false);
-                    cout << "Adding state " << state << " to bad queue with distance " << 0 << endl;
+//                    cout << "Adding state " << state << " to bad queue with distance " << 0 << endl;
                     badFound = true;
 //                    visitedBad.insert(state);
                 }
                 if (label == "goal") {
                     distanceToTarget[state] = 0;
                     queue.emplace(state, 0, true);
-                    cout << "Adding state " << state << " to target queue with distance " << 0 << endl;
+//                    cout << "Adding state " << state << " to target queue with distance " << 0 << endl;
                     targetFound = true;
 //                    visitedTarget.insert(state);
                 }
                 if (!badFound){
                     distanceToBad[state] = INF;
-                    cout << "State " << state << " is not bad, setting distance to bad to " << INF << endl;
+//                    cout << "State " << state << " is not bad, setting distance to bad to " << INF << endl;
                 }
                 if (!targetFound){
                     distanceToTarget[state] = INF;
-                    cout << "State " << state << " is not target, setting distance to target to " << INF << endl;
+//                    cout << "State " << state << " is not target, setting distance to target to " << INF << endl;
                 }
             }
         } else {
             distanceToBad[state] = INF;
-            cout << "State " << state << " is not bad, setting distance to bad to " << INF << endl;
+//            cout << "State " << state << " is not bad, setting distance to bad to " << INF << endl;
             distanceToTarget[state] = INF;
-            cout << "State " << state << " is not target, setting distance to target to " << INF << endl;
+//            cout << "State " << state << " is not target, setting distance to target to " << INF << endl;
         }
     }
 
     // print the initial distances
-    cout << "Initial distances to target and bad states" << endl;
-    cout << "State | Distance to Target | Distance to Bad" << endl;
-    for (const auto& state : distanceToTarget) {
-        cout << state.first << " | " << state.second << " | " << distanceToBad[state.first] << endl;
-    }
+//    cout << "Initial distances to target and bad states" << endl;
+//    cout << "State | Distance to Target | Distance to Bad" << endl;
+//    for (const auto& state : distanceToTarget) {
+//        cout << state.first << " | " << state.second << " | " << distanceToBad[state.first] << endl;
+//    }
 
     // multi-target BFS to calculate distances
     while (!queue.empty()) {
         auto [state, distance, is_from_target] = queue.front();
-        cout << "State: " << state << " Distance: " << distance << " Is from target: " << is_from_target << endl;
+//        cout << "State: " << state << " Distance: " << distance << " Is from target: " << is_from_target << endl;
         queue.pop();
-
-//        if (is_from_target) {
-//            if (distanceToTarget[state] < distance) continue;
-////            distanceToTarget[state] = distance;
-//        } else {
-//            if (distanceToBad[state] < distance) continue;
-////            distanceToBad[state] = distance;
-//        }
 
         if (reversedGraph.find(state) != reversedGraph.end()) {
             for (const auto& prevState : reversedGraph[state]) {
                 if (is_from_target && distance + 1 < distanceToTarget[prevState]) {
                     queue.emplace(prevState, distance + 1, is_from_target);
-//                    visitedTarget.insert(prevState);
                     distanceToTarget [prevState] = distance + 1;
-                    cout << "Adding state " << prevState << " to target queue with distance " << distance + 1 << endl;
+//                    cout << "Adding state " << prevState << " to target queue with distance " << distance + 1 << endl;
                 } else if (!is_from_target && distance + 1 < distanceToBad[prevState]) {
                     queue.emplace(prevState, distance + 1, is_from_target);
                     distanceToBad [prevState] = distance + 1;
-                    cout << "Adding state " << prevState << " to bad queue with distance " << distance + 1 << endl;
+//                    cout << "Adding state " << prevState << " to bad queue with distance " << distance + 1 << endl;
                 }
             }
         }
     }
 
     // debugging print
-    cout << "State | Distance to Target | Distance to Bad" << endl;
-    for (const auto& state : distanceToTarget) {
-        cout << state.first << " | " << state.second << " | " << distanceToBad[state.first] << endl;
-    }
+//    cout << "State | Distance to Target | Distance to Bad" << endl;
+//    for (const auto& state : distanceToTarget) {
+//        cout << state.first << " | " << state.second << " | " << distanceToBad[state.first] << endl;
+//    }
 }
 
 void Drn::loadDRNFile(const std::string filename) {
@@ -378,7 +398,8 @@ public:
         } else {
             targetScore = 1.0/(state.distToTarget+1);
         }
-        return ValuedAction(0, State::Weight(particles) * (targetScore));
+        // NOTE: I am using the default action 0, but ideally I should use the action that reduce the distance. But I believe the code will still work
+        return ValuedAction(0, State::Weight(particles) * (0.6*targetScore - 0.4*badScore));
     }
 };
 
@@ -395,8 +416,15 @@ public:
 };
 
 ScenarioLowerBound* Drn::CreateScenarioLowerBound(string name, string particle_bound_name) const {
-    return new StupidParticleLowerBound(this);
-//    return new DistBasedParticleLowerBound(this);
+    return new DistBasedParticleLowerBound(this);
+//    if (name == "DEFAULT" || name == "STUPID" || name == "TRIVIAL") {
+//        return new StupidParticleLowerBound(this);
+//    } else if (name == "DIST") {
+//        return new DistBasedParticleLowerBound(this);
+//    } else {
+//        cerr << "[drn::CreateScenarioLowerBound] Unsupported scenario lower bound type: " << name << endl;
+//        exit(1);
+//    }
 }
 
 //* =================
