@@ -9,7 +9,10 @@ set(CONFIG_INSTALL_PATH "${LIBRARY_INSTALL_PATH}/${PROJECT_NAME}/cmake")
 set(DESPOT_BUILD_EXAMPLES ON CACHE BOOL "Build C++ model examples")
 set(DESPOT_BUILD_POMDPX ON CACHE BOOL "Build POMDPX example")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|i[3-6]86|AMD64")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
+endif()
+
 set(CMAKE_MODULE_PATH ${CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 include_directories(include)
